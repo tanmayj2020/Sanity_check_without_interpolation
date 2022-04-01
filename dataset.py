@@ -90,7 +90,7 @@ class Dataset_TUBerlin(data.Dataset):
             sketch_path = self.Test_Sketch[item]
             vector_x = self.Coordinate[sketch_path]
 
-            sketch_img = rasterize_Sketch(vector_x, self.hp.channels)
+            sketch_img = rasterize_Sketch(vector_x)
             # sketch_img = torch.from_numpy(sketch_img)
             sketch_img = Image.fromarray(sketch_img).convert('RGB')
             sketch_img = self.test_transform(sketch_img)
