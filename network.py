@@ -53,7 +53,7 @@ class Resnet_Network(nn.Module):
         x = self.pool_method(x)
         features = torch.flatten(x, 1)
         out = self.classifier(features)
-        return out
+        return  nn.Sigmoid()(out)
 
     # def forward(self, input, bb_box=None):
     #     x = self.features(input)
