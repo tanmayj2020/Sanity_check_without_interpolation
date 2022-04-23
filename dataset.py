@@ -76,10 +76,6 @@ class Dataset_TUBerlin(data.Dataset):
             sketch_img = rasterize_Sketch(vector_x)
             sketch_img = Image.fromarray(sketch_img).convert('RGB')
 
-
-            n_flip = random.random()
-            if n_flip > 0.5:
-                sketch_img = F.hflip(sketch_img)
             sketch_img = self.train_transform(sketch_img)
             # sketch_img = sketch_img.float()
 
