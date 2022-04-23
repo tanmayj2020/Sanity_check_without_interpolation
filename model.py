@@ -6,6 +6,9 @@ import torch.nn as nn
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+def bceloss(x, y):
+    eps = 1e-6
+    return -torch.mean(y * torch.log(x + eps) + (1 - y) * torch.log(1 - x + eps))
 
 class Sketch_Classification(nn.Module):
     def __init__(self, hp):
@@ -13,7 +16,7 @@ class Sketch_Classification(nn.Module):
         self.Network = eval(hp.backbone_name + "_Network(hp)")
         self.train_params = self.parameters()
         self.optimizer = optim.Adam(self.train_params, hp.learning_rate)
-        self.loss = nn.CrossEntropyLoss()
+        self.loss = bceloss
         self.hp = hp
 
     def train_model(self, batch):
@@ -34,8 +37,7 @@ class Sketch_Classification(nn.Module):
 
             output = self.Network(batch["sketch_img"].to(device))
             test_loss += self.loss(output, batch["sketch_label"].to(device)).item()
-            prediction = output.argmax(dim=1, keepdim=True).to("cpu")
-            correct += prediction.eq(batch["sketch_label"].view_as(prediction)).sum().item()
+            correct += (torch.argmax(output, dim=1) == torch.argmax(batch["sketch_label"], dim=1)).float().sum()
 
         test_loss /= len(dataloader_Test.dataset)
         accuracy = 100.0 * correct / len(dataloader_Test.dataset)

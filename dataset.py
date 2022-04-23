@@ -10,6 +10,7 @@ random.seed(9001)
 import torchvision.transforms.functional as F
 from my_rasterize import rasterize_Sketch
 import numpy as np
+from utils_ import strategy3
 
 class Dataset_TUBerlin(data.Dataset):
     def __init__(self, hp, mode):
@@ -65,31 +66,35 @@ class Dataset_TUBerlin(data.Dataset):
 
         if self.mode == 'Train':
             sketch_path = self.Train_Sketch[item]
-
             vector_x = self.Coordinate[sketch_path]
-            #sketch_img = rasterize_Sketch(vector_x, self.hp.channels)
-            # sketch_img = torch.from_numpy(sketch_img)
+            
+            label = torch.zeros(len(self.name2num))
+            label[self.name2num[sketch_path.split("/")[0]]] = 1
+            
+            vector_x = strategy3(vector_x)
+
             sketch_img = rasterize_Sketch(vector_x)
             sketch_img = Image.fromarray(sketch_img).convert('RGB')
+
 
             n_flip = random.random()
             if n_flip > 0.5:
                 sketch_img = F.hflip(sketch_img)
-
-
             sketch_img = self.train_transform(sketch_img)
             # sketch_img = sketch_img.float()
 
 
             sample = {'sketch_img': sketch_img,
-                       'sketch_label': self.name2num[sketch_path.split('/')[0]]}
+                       'sketch_label': label}
 
 
         elif self.mode == 'Test':
 
             sketch_path = self.Test_Sketch[item]
+            label = torch.zeros(len(self.name2num))
+            label[self.name2num[sketch_path.split("/")[0]]] = 1
             vector_x = self.Coordinate[sketch_path]
-
+            vector_x = strategy3(vector_x)
             sketch_img = rasterize_Sketch(vector_x)
             # sketch_img = torch.from_numpy(sketch_img)
             sketch_img = Image.fromarray(sketch_img).convert('RGB')
@@ -97,7 +102,7 @@ class Dataset_TUBerlin(data.Dataset):
             # sketch_img = sketch_img.float()
 
             sample = {'sketch_img': sketch_img,
-                     'sketch_label': self.name2num[sketch_path.split('/')[0]]}
+                     'sketch_label': label}
 
         return sample
 
@@ -118,7 +123,7 @@ def collate_self(batch):
         batch_mod['sketch_label'].append(i_batch['sketch_label'])
 
     batch_mod['sketch_img'] = torch.stack(batch_mod['sketch_img'], dim=0)
-    batch_mod['sketch_label'] = torch.tensor(batch_mod['sketch_label'])
+    batch_mod['sketch_label'] = torch.stack(batch_mod['sketch_label'] , dim =0)
 
     return batch_mod
 
